@@ -1,0 +1,19 @@
+{
+  "node": true,
+  "strict": true,
+  "predef": [
+    "before",
+    "beforeEach",
+    "it",
+    "describe",
+    "after"
+  ],
+  "latedef": false,
+  "white": true,
+  "indent": 2,
+  "curly": true,
+  "camelcase": true,
+  "trailing": true,
+  "expr": true,
+  "newcap": false
+}
