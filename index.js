@@ -5,9 +5,15 @@ var HTTP = require("q-io/http");
 
 var server = null;
 var failOnNextRequestMessage = null;
+var bodyForNextRequest = null;
+var contentType = "application/json; charset=utf-8";
 
 exports.restart = function () {
   return exports.start(exports.port);
+};
+
+exports.setJSONForNextRequest = function (data) {
+  bodyForNextRequest = JSON.stringify(data);
 };
 
 exports.failOnNextRequest = function (message) {
@@ -53,20 +59,22 @@ function handleRequest(request, response) {
     return {
       "status": 200,
       "headers": {
-        "content-type": "application/json"
+        "content-type": contentType
       },
       "body": [
         "{ \"status\": \"error\", \"message\": \"" + msg + "\" }"
       ]
     };
   }
+
+  var body = bodyForNextRequest || "{ \"status\": \"ok\" }";
+  bodyForNextRequest = null;
+
   return {
     "status": 200,
     "headers": {
-      "content-type": "application/json"
+      "content-type": contentType
     },
-    "body": [
-      "{ \"status\": \"ok\" }"
-    ]
+    "body": [ body ]
   };
 }
