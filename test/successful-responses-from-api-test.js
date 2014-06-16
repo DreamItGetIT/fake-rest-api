@@ -24,8 +24,8 @@ describe("successful responses from api", function () {
   };
 
   before(function (done) {
-    fakeAPI = new FakeRestAPI({ port: serverPort });
-    fakeAPI.start()
+    fakeAPI = new FakeRestAPI();
+    fakeAPI.start(serverPort)
     .then(makeRequest)
     .then(done, done);
   });

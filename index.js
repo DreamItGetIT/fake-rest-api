@@ -5,12 +5,6 @@ var HTTP = require("q-io/http");
 
 var CONTENT_TYPE = "application/json; charset=utf-8";
 
-function validateRequiredOptions(options) {
-  if ('number' !== typeof options.port) {
-    throw new Error('port is required option');
-  }
-}
-
 function clonePlainObject(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -33,7 +27,9 @@ function FakeRestAPI(options) {
     return new FakeRestAPI(options);
   }
 
-  validateRequiredOptions(options);
+  if (!options) {
+    options = {};
+  }
 
   if (options.defaultResponse) {
     this.defaultResponse = ('string' === typeof options.defaultResponse) ? options.defaultResponse : JSON.stringify(options.defaultResponse);
@@ -47,7 +43,6 @@ function FakeRestAPI(options) {
     this.failResponseFormat = require('./default-error-response-body.json');
   }
 
-  this.port = options.port;
   this.requests = [];
   this.responsesBody = [];
   this.server = null;
@@ -74,9 +69,13 @@ FakeRestAPI.prototype.failOnNextRequest = function (objOrMsg) {
   this.responsesBody.unshift(JSON.stringify(respBody));
 };
 
-FakeRestAPI.prototype.start = function () {
+FakeRestAPI.prototype.start = function (port) {
+  var _this = this;
   this.server = HTTP.Server(handleRequest.bind(null, this));
-  return this.server.listen(this.port).thenResolve();
+  return this.server.listen(port)
+  .then(function (server) {
+    _this.port = server.address().port;
+  });
 };
 
 FakeRestAPI.prototype.restart = function () {
