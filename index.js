@@ -43,8 +43,8 @@ function FakeRestAPI(options) {
     this.failResponseFormat = require('./default-error-response-body.json');
   }
 
-  this.requests = [];
-  this.responsesBody = [];
+  this.requests = null;
+  this.responsesBody = null;
   this.server = null;
 }
 
@@ -71,6 +71,9 @@ FakeRestAPI.prototype.failOnNextRequest = function (objOrMsg) {
 
 FakeRestAPI.prototype.start = function (port) {
   var _this = this;
+
+  this.requests = [];
+  this.responsesBody = [];
   this.server = HTTP.Server(handleRequest.bind(null, this));
   return this.server.listen(port)
   .then(function (server) {
@@ -82,16 +85,15 @@ FakeRestAPI.prototype.restart = function () {
   return this.stop(this.start.bind(this));
 };
 
-FakeRestAPI.prototype.waitForRequests = function (number) {
+FakeRestAPI.prototype.waitForRequests = function (count) {
   function check() {
-    if (_this.requests.length === number + startIdx) {
-      return Q(_this.requests.slice(startIdx));
+    if (_this.requests.length === count) {
+      return Q(_this.requests);
     }
     return Q.delay(10).then(check);
   }
 
   var _this = this;
-  var startIdx = this.requests.length;
   return check();
 };
 
