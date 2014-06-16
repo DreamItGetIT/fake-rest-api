@@ -3,10 +3,10 @@
 var Q = require("q");
 var HTTP = require("q-io/http");
 var expect = require("chai").expect;
-var fakeAPI = require("../index");
+var FakeRestAPI = require("../index");
 
 describe("successful responses from api", function () {
-  var serverPort = 4000, response;
+  var serverPort = 4000, response, fakeAPI;
   var expectedContentType = "application/json; charset=utf-8";
 
   var makeRequest = function () {
@@ -24,7 +24,8 @@ describe("successful responses from api", function () {
   };
 
   before(function (done) {
-    fakeAPI.start(serverPort)
+    fakeAPI = new FakeRestAPI({ port: serverPort });
+    fakeAPI.start()
     .then(makeRequest)
     .then(done, done);
   });
