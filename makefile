@@ -7,5 +7,5 @@ lint:
 	jshint index.js
 	jshint test
 
-test:
+test: lint
 	mocha -R spec
