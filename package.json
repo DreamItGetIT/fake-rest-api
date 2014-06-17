@@ -1,6 +1,6 @@
 {
   "name": "fake-rest-api",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Stupidly simple fake rest API for use in testing",
   "main": "index.js",
   "scripts": {
