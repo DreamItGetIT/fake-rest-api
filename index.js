@@ -48,7 +48,7 @@ function FakeRestAPI(options) {
   this.server = null;
 }
 
-FakeRestAPI.prototype.setJSONForRquest = function (body) {
+FakeRestAPI.prototype.setJSONForRequest = function (body) {
   this.responsesBody.push(('string' === typeof body) ? body : JSON.stringify(body));
 };
 
