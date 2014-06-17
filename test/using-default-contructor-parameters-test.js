@@ -1,33 +1,30 @@
 "use strict";
 
-var Q = require("q");
-var HTTP = require("q-io/http");
 var expect = require("chai").expect;
+var helper = require('./helper');
 var FakeRestAPI = require("../index");
 
-describe("successful responses from api", function () {
+describe("An instance created with default parameters", function () {
   var serverPort = 4000, response, fakeAPI;
   var expectedContentType = "application/json; charset=utf-8";
-
-  var makeRequest = function () {
-    return HTTP.request({
-      host: "localhost",
-      port: serverPort,
-      headers: {
-        "content-type": expectedContentType
-      }
-    })
-    .then(function (r) {
-      response = r;
-    })
-    .thenResolve();
+  var requestOptions = {
+    port: serverPort,
+    headers: {
+      "content-type": expectedContentType
+    }
   };
 
   before(function (done) {
     fakeAPI = new FakeRestAPI();
     fakeAPI.start(serverPort)
-    .then(makeRequest)
-    .then(done, done);
+    .then(helper.makeRequest.bind(null, requestOptions))
+    .then(function (resp) {
+      response = resp;
+    }).then(done, done);
+  });
+
+  after(function (done) {
+    fakeAPI.stop().then(done, done);
   });
 
   it("successfully returns", function () {
@@ -48,7 +45,10 @@ describe("successful responses from api", function () {
     var errorMessage = "because you don't like cats";
     before(function (done) {
       fakeAPI.failOnNextRequest(errorMessage);
-      makeRequest().then(done, done);
+      helper.makeRequest(requestOptions)
+      .then(function (resp) {
+        response = resp;
+      }).then(done, done);
     });
 
     it("successfully returns", function () {
@@ -61,14 +61,16 @@ describe("successful responses from api", function () {
       .then(function (body) {
         var parsedBody = JSON.parse(body);
         expect(parsedBody).to.deep.equal({ status: "error", message: errorMessage });
-      })
-      .then(done, done);
+      }).then(done, done);
     });
   });
 
   describe("does not fail on the next request", function () {
     before(function (done) {
-      makeRequest().then(done, done);
+      helper.makeRequest(requestOptions)
+      .then(function (resp) {
+        response = resp;
+      }).then(done, done);
     });
 
     it("returns a status of 'ok'", function (done) {
@@ -86,7 +88,10 @@ describe("successful responses from api", function () {
 
     before(function (done) {
       fakeAPI.setJSONForNextRequest(expectedBody);
-      makeRequest().then(done, done);
+      helper.makeRequest(requestOptions)
+      .then(function (resp) {
+        response = resp;
+      }).then(done, done);
     });
 
     it("successfully returns", function () {
@@ -106,7 +111,10 @@ describe("successful responses from api", function () {
 
   describe("returns usual response on the next request", function () {
     before(function (done) {
-      makeRequest().then(done, done);
+      helper.makeRequest(requestOptions)
+      .then(function (resp) {
+        response = resp;
+      }).then(done, done);
     });
 
     it("returns a status of 'ok'", function (done) {
