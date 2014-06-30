@@ -1,6 +1,6 @@
 {
   "name": "fake-rest-api",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,11 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "q": "^1.0.1",
+    "lodash": "^2.4.1",
     "q-io": "^1.11.1"
   },
   "devDependencies": {
     "chai": "~1.9.1",
-    "mocha": "~1.20.1",
-    "jshint": "~2.5.1"
+    "jshint": "~2.5.1",
+    "mocha": "~1.20.1"
   }
 }
