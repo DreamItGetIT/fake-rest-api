@@ -1,41 +1,63 @@
 "use strict";
 
-var Q = require("q");
 var HTTP = require("q-io/http");
+var _ = require("lodash");
+var Q = require("q");
 
-var server = null;
-var failOnNextRequestMessage = null;
-var bodyForNextRequest = null;
-var contentType = "application/json; charset=utf-8";
-
-exports.restart = function () {
-  return exports.start(exports.port);
+var DEFAULT_RESPONSE = {
+  status: 200,
+  headers: {
+    "content-type": "application/json; charset=utf-8"
+  },
+  body: [JSON.stringify({ status: "ok" })]
 };
 
-exports.setJSONForNextRequest = function (data) {
-  bodyForNextRequest = JSON.stringify(data);
-};
+function FakeRestAPI(opts) {
+  opts = opts || {};
+  this.requests = [];
+  this.port = opts.port;
+  this.defaultResponse = opts.defaultResponse || DEFAULT_RESPONSE;
+}
 
-exports.failOnNextRequest = function (message) {
-  failOnNextRequestMessage = message;
-};
+FakeRestAPI.prototype.start = function () {
+  var port = this.port || 0;
 
-exports.start = function (port) {
-  port = port || 0;
-  exports.requests = [];
+  this.server = HTTP.Server(handleRequest.bind(null, this));
 
-  server = HTTP.Server(handleRequest);
-
-  return server.listen(port)
+  return this.server.listen(port)
   .then(function (server) {
-    exports.port = server.address().port;
+    this.port = server.address().port;
+  }.bind(this));
+};
+
+FakeRestAPI.prototype.stop = function () {
+  if (!this.server) {
+    return Q();
+  }
+  var server = this.server;
+  this.server = null;
+  return server.stop();
+};
+
+FakeRestAPI.prototype.overrideNextResponse = function (r) {
+  this.nextResponse = r;
+};
+
+FakeRestAPI.prototype.makeNextResponseAnError = function (message) {
+  this.overrideNextResponse({
+    body: [JSON.stringify({
+      status: "error",
+      message: message
+    })]
   });
 };
 
-exports.waitForRequests = function (count) {
+FakeRestAPI.prototype.waitForRequests = function (count) {
+  var api = this;
+
   function check() {
-    if (exports.requests.length === count) {
-      return Q(exports.requests);
+    if (api.requests.length === count) {
+      return Q(api.requests);
     }
     return Q.delay(10).then(check);
   }
@@ -43,38 +65,12 @@ exports.waitForRequests = function (count) {
   return check();
 };
 
-exports.stop = function () {
-  if (server !== null) {
-    server.stop();
-    server = null;
-  }
-};
+function handleRequest(fakeRestAPI, req) {
+  fakeRestAPI.requests.push(req);
 
-function handleRequest(request, response) {
-  exports.requests.push(request);
-
-  if (failOnNextRequestMessage) {
-    var msg = failOnNextRequestMessage;
-    failOnNextRequestMessage = null;
-    return {
-      "status": 200,
-      "headers": {
-        "content-type": contentType
-      },
-      "body": [
-        "{ \"status\": \"error\", \"message\": \"" + msg + "\" }"
-      ]
-    };
-  }
-
-  var body = bodyForNextRequest || "{ \"status\": \"ok\" }";
-  bodyForNextRequest = null;
-
-  return {
-    "status": 200,
-    "headers": {
-      "content-type": contentType
-    },
-    "body": [ body ]
-  };
+  var response = _.extend({}, fakeRestAPI.defaultResponse, fakeRestAPI.nextResponse);
+  fakeRestAPI.nextResponse = undefined;
+  return response;
 }
+
+module.exports = FakeRestAPI;
