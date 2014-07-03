@@ -209,4 +209,34 @@ describe("FakeRestAPI", function () {
       }).then(done, done);
     });
   });
+
+  describe("overriding the default response", function () {
+    var restAPI, overrideResponse, response;
+
+    before(function (done) {
+      overrideResponse = {
+        status: 201,
+        headers: {
+          "content-type": "application/json"
+        },
+        body: [JSON.stringify({ foo: "bar" })]
+      };
+
+      restAPI = new FakeRestAPI({
+        defaultResponse: overrideResponse
+      });
+      restAPI.start()
+      .then(function () {
+        return makeRequest({ port: restAPI.port, method: "GET" });
+      })
+      .then(function (r) { response = r; })
+      .then(done, done);
+    });
+
+    it("responds with the overridden response", function () {
+      expect(response).to.have.property("status", overrideResponse.status);
+      expect(response.headers).to.have.property("content-type", overrideResponse.headers["content-type"]);
+      expect(response.bodyAsObject).to.deep.equal({ foo: "bar" });
+    });
+  });
 });

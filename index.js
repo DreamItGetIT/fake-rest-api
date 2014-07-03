@@ -16,7 +16,7 @@ function FakeRestAPI(opts) {
   opts = opts || {};
   this.requests = [];
   this.port = opts.port;
-  this.defaultResponse = DEFAULT_RESPONSE;
+  this.defaultResponse = opts.defaultResponse || DEFAULT_RESPONSE;
 }
 
 FakeRestAPI.prototype.start = function () {
