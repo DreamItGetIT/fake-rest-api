@@ -146,6 +146,55 @@ describe("FakeRestAPI", function () {
         });
       }).then(done, done);
     });
+
+    it("it is possible to override multiple responses", function (done) {
+      restAPI.overrideNextResponse([
+        { body: [JSON.stringify({ status: "page-one" })] },
+        { body: [JSON.stringify({ status: "page-two" })] }
+      ]);
+      makeRequest({ port: restAPI.port, method: "GET" })
+      .then(function (r) {
+        expect(r.bodyAsObject).to.have.property("status", "page-one");
+
+        return makeRequest({ port: restAPI.port, method: "GET" });
+      })
+      .then(function (r) {
+        expect(r.bodyAsObject).to.have.property("status", "page-two");
+
+        return makeRequest({ port: restAPI.port, method: "GET" });
+      })
+      .then(function (r) {
+        expect(r.bodyAsObject).to.have.property("status", "ok");
+      })
+      .then(done, done);
+    });
+
+    it("is possible to overwrite an array of responses before they are all sent", function (done) {
+      restAPI.overrideNextResponse([
+        { body: [JSON.stringify({ status: "page-one" })] },
+        { body: [JSON.stringify({ status: "page-two" })] },
+        { body: [JSON.stringify({ status: "page-three" })] }
+      ]);
+      makeRequest({ port: restAPI.port, method: "GET" })
+      .then(function (r) {
+        expect(r.bodyAsObject).to.have.property("status", "page-one");
+
+        restAPI.overrideNextResponse({ body: [JSON.stringify({ status: "overridden" })] });
+        return makeRequest({ port: restAPI.port, method: "GET" });
+      })
+      .then(function (r) {
+        expect(r.bodyAsObject).to.have.property("status", "overridden");
+      })
+      .then(done, done);
+    });
+
+    it("trying to override with an empty array does not break", function (done) {
+      restAPI.overrideNextResponse([]);
+      makeRequest({ port: restAPI.port, method: "GET" })
+      .then(function (r) {
+        expect(r.bodyAsObject).to.deep.equal({ status: "ok" });
+      }).then(done, done);
+    });
   });
 
   describe("making the next request return a standard error response", function () {

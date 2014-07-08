@@ -68,8 +68,19 @@ FakeRestAPI.prototype.waitForRequests = function (count) {
 function handleRequest(fakeRestAPI, req) {
   fakeRestAPI.requests.push(req);
 
-  var response = _.extend({}, fakeRestAPI.defaultResponse, fakeRestAPI.nextResponse);
-  fakeRestAPI.nextResponse = undefined;
+  var nextResponse;
+  if (Array.isArray(fakeRestAPI.nextResponse)) {
+    if (fakeRestAPI.nextResponse.length === 0) {
+      fakeRestAPI.nextResponse = undefined;
+    } else {
+      nextResponse = fakeRestAPI.nextResponse.splice(0, 1)[0];
+    }
+  } else {
+    nextResponse = fakeRestAPI.nextResponse;
+    fakeRestAPI.nextResponse = undefined;
+  }
+
+  var response = _.extend({}, fakeRestAPI.defaultResponse, nextResponse);
   return response;
 }
 
